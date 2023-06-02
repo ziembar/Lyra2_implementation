@@ -1,5 +1,27 @@
+import java.nio.ByteBuffer;
+
 public class Blake2BSponge {
     long[] state;
+    private final int BLOCK_LENGTH_IN_LONG;
+
+    public byte[] longToBytes(long x) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(x);
+        return buffer.array();
+    }
+
+    public static long switchEndian(final long x) {
+        return (x & 0x00000000000000FFL) << 56
+                | (x & 0x000000000000FF00L) << 40
+                | (x & 0x0000000000FF0000L) << 24
+                | (x & 0x00000000FF000000L) << 8
+                | (x & 0x000000FF00000000L) >>> 8
+                | (x & 0x0000FF0000000000L) >>> 24
+                | (x & 0x00FF000000000000L) >>> 40
+                | (x & 0xFF00000000000000L) >>> 56
+                ;
+    }
+
     long[] InitiazationVector = {
             0x6a09e667f3bcc908L,
             0xbb67ae8584caa73bL,
@@ -11,7 +33,12 @@ public class Blake2BSponge {
             0x5be0cd19137e2179L};
 
     public Blake2BSponge() {
+        this.BLOCK_LENGTH_IN_LONG = Parameters.BLOCK_LENGTH_IN_LONG;
         state = new long[16];
+        for (int i = 0; i < 8; i++) {
+            state[i] = 0;
+            state[i + 8] = InitiazationVector[i];
+        }
     }
 
     private void shuffle(int rounds) {
@@ -39,5 +66,116 @@ public class Blake2BSponge {
 
         state[c] = state[c] + state[d];
         state[b] = (state[b] ^ state[c]) >> 63;
+    }
+
+    private void squeeze(byte[] out, int ammount) {
+        int iterator = 0;
+        //whole blocks
+        int numberOfBlocks = ammount / Parameters.BLOCK_LENGTH_IN_BYTES;
+        int rest = ammount % Parameters.BLOCK_LENGTH_IN_BYTES;
+        for (int i = 0; i < numberOfBlocks; i++) {
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                byte[] bytes = longToBytes(state[j]);
+                for (int k = 0; k < 8; k++) {
+                    out[iterator] = bytes[k];
+                    iterator++;
+                }
+            }
+            shuffle(Parameters.FULL_ROUNDS);
+        }
+        //rest
+        int longsInRest = rest / 8;
+        int restOfRest = rest % 8;
+        for (int i = 0; i < longsInRest; i++) {
+            byte[] bytes = longToBytes(state[i]);
+            for (int j = 0; j < 8; j++) {
+                out[iterator] = bytes[j];
+                iterator++;
+            }
+        }
+        //remaining bytes
+        for (int i = 0; i < restOfRest; i++) {
+            byte[] bytes = longToBytes(state[longsInRest]);
+            out[iterator] = bytes[i];
+            iterator++;
+        }
+    }
+
+    private void absorbBlock(long[] in, int length) {
+        for (int i = 0; i < length; i++) {
+            state[i] ^= in[i];
+        }
+        shuffle(Parameters.FULL_ROUNDS);
+    }
+
+    //used for row 0
+    private void reducedSqueezeRow(long[] out) {
+        int iterator = 0;
+        for (int i = 0; i < Parameters.N_COLS; i++) {
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                out[iterator] = state[j];
+                iterator++;
+            }
+            shuffle(Parameters.HALF_ROUNDS);
+        }
+    }
+
+    private void reducedDuplexRow1And2(long[] out, long[] in) {
+        int iteratorIn = 0, iteratorOut = 0;
+        for (int i = 0; i < Parameters.N_COLS; i++) {
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                state[j] ^= in[iteratorIn];
+                iteratorIn++;
+            }
+            iteratorIn -= Parameters.BLOCK_LENGTH_IN_LONG;
+            shuffle(Parameters.HALF_ROUNDS);
+            for (int j = Parameters.BLOCK_LENGTH_IN_LONG - 1; j >= 0; j--) {
+                out[iteratorOut] = state[j] ^ in[iteratorIn];
+                iteratorIn++;
+                iteratorOut--;
+            }
+        }
+    }
+
+    private void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+        for (int i = 0; i < Parameters.N_COLS; i++) {
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
+                state[j] ^= row1[offset + j] + prev0[offset + j] + prev1[offset + j];
+
+            }
+            shuffle(Parameters.HALF_ROUNDS);
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
+                row0[(Parameters.N_COLS - 1 - i) * Parameters.BLOCK_LENGTH_IN_LONG + j]
+                        = prev0[offset + j] ^ state[j];
+            }
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
+                row1[offset + j] ^= state[(j + 2) % Parameters.BLOCK_LENGTH_IN_LONG];
+            }
+        }
+    }
+
+    private void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+        for (int i = 0; i < Parameters.N_COLS; i++) {
+            int col0 = (int) Long.remainderUnsigned(switchEndian(state[4]),
+                    Parameters.N_COLS) * Parameters.BLOCK_LENGTH_IN_LONG;
+            int col1 = (int) Long.remainderUnsigned(switchEndian(state[6]),
+                    Parameters.N_COLS) * Parameters.BLOCK_LENGTH_IN_LONG;
+            int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                state[j] ^= row0[offset + j] + row1[offset + j]
+                        + prev0[Parameters.BLOCK_LENGTH_IN_LONG * i + j]
+                        + prev1[Parameters.BLOCK_LENGTH_IN_LONG * i + j];
+            }
+            shuffle(Parameters.HALF_ROUNDS);
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                row0[offset+j]^=state[j];
+            }
+            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+                row1[offset+j]^=state[(j+2)%Parameters.BLOCK_LENGTH_IN_LONG];
+            }
+        }
     }
 }
