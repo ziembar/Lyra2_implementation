@@ -1,7 +1,9 @@
 public class Test {
     public static void main(String[] args) {
-        byte a = 127  , b= 127;
-        byte c = (byte) (a+b);
+        long b = 33;
+        long c = Long.rotateRight(b,30);
+        long d = (b << (64 - 30)) | (b >>> 30);
         System.out.println(c);
+        System.out.println(d);
     }
 }

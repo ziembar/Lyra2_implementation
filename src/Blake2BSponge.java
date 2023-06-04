@@ -3,6 +3,31 @@ import java.nio.ByteBuffer;
 public class Blake2BSponge {
     long[] state;
     private final int BLOCK_LENGTH_IN_LONG;
+    private final int BLOCK_LENGTH_IN_BYTES;
+    private final int N_COLS;
+    private final int FULL_ROUNDS;
+    private final int HALF_ROUNDS;
+
+    public long addWordwise(long a, long b, long c, long d) {
+        return switchEndian(
+                switchEndian(a)
+                        + switchEndian(b)
+                        + switchEndian(c)
+                        + switchEndian(d));
+    }
+
+    public long addWordwise(long a, long b, long c) {
+        return switchEndian(
+                switchEndian(a)
+                        + switchEndian(b)
+                        + switchEndian(c));
+    }
+
+    public long addWordwise(long a, long b) {
+        return switchEndian(
+                switchEndian(a)
+                        + switchEndian(b));
+    }
 
     public byte[] longToBytes(long x) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
@@ -10,7 +35,7 @@ public class Blake2BSponge {
         return buffer.array();
     }
 
-    public static long switchEndian(final long x) {
+    public long switchEndian(final long x) {
         return (x & 0x00000000000000FFL) << 56
                 | (x & 0x000000000000FF00L) << 40
                 | (x & 0x0000000000FF0000L) << 24
@@ -18,8 +43,7 @@ public class Blake2BSponge {
                 | (x & 0x000000FF00000000L) >>> 8
                 | (x & 0x0000FF0000000000L) >>> 24
                 | (x & 0x00FF000000000000L) >>> 40
-                | (x & 0xFF00000000000000L) >>> 56
-                ;
+                | (x & 0xFF00000000000000L) >>> 56;
     }
 
     long[] InitiazationVector = {
@@ -34,6 +58,10 @@ public class Blake2BSponge {
 
     public Blake2BSponge() {
         this.BLOCK_LENGTH_IN_LONG = Parameters.BLOCK_LENGTH_IN_LONG;
+        this.BLOCK_LENGTH_IN_BYTES = Parameters.BLOCK_LENGTH_IN_BYTES;
+        this.N_COLS = Parameters.N_COLS;
+        this.FULL_ROUNDS = Parameters.FULL_ROUNDS;
+        this.HALF_ROUNDS = Parameters.HALF_ROUNDS;
         state = new long[16];
         for (int i = 0; i < 8; i++) {
             state[i] = 0;
@@ -55,33 +83,33 @@ public class Blake2BSponge {
     }
 
     private void functionG(int a, int b, int c, int d) {
-        state[a] = state[a] + state[b];
-        state[d] = (state[d] ^ state[a]) >> 32;
+        state[a] = addWordwise(state[a], state[b]);
+        state[d] = switchEndian(Long.rotateRight(switchEndian(state[d] ^ state[a]), 32));
 
-        state[c] = state[c] + state[d];
-        state[b] = (state[b] ^ state[c]) >> 24;
+        state[c] = addWordwise(state[c], state[d]);
+        state[b] = switchEndian(Long.rotateRight(switchEndian(state[b] ^ state[c]), 24));
 
-        state[a] = state[a] + state[b];
-        state[d] = (state[d] ^ state[a]) >> 16;
+        state[a] = addWordwise(state[a], state[b]);
+        state[d] = switchEndian(Long.rotateRight(switchEndian(state[d] ^ state[a]), 16));
 
-        state[c] = state[c] + state[d];
-        state[b] = (state[b] ^ state[c]) >> 63;
+        state[c] = addWordwise(state[c], state[d]);
+        state[b] = switchEndian(Long.rotateRight(switchEndian(state[b] ^ state[c]), 63));
     }
 
-    public void squeeze(byte[] out, int amount) {
+    private void squeeze(byte[] out, int ammount) {
         int iterator = 0;
         //whole blocks
-        int numberOfBlocks = amount / Parameters.BLOCK_LENGTH_IN_BYTES;
-        int rest = amount % Parameters.BLOCK_LENGTH_IN_BYTES;
+        int numberOfBlocks = ammount / BLOCK_LENGTH_IN_BYTES;
+        int rest = ammount % BLOCK_LENGTH_IN_BYTES;
         for (int i = 0; i < numberOfBlocks; i++) {
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 byte[] bytes = longToBytes(state[j]);
                 for (int k = 0; k < 8; k++) {
                     out[iterator] = bytes[k];
                     iterator++;
                 }
             }
-            shuffle(Parameters.FULL_ROUNDS);
+            shuffle(FULL_ROUNDS);
         }
         //rest
         int longsInRest = rest / 8;
@@ -101,35 +129,35 @@ public class Blake2BSponge {
         }
     }
 
-    public void absorbBlock(long[] in, int length) {
+    private void absorbBlock(long[] in, int length) {
         for (int i = 0; i < length; i++) {
             state[i] ^= in[i];
         }
-        shuffle(Parameters.FULL_ROUNDS);
+        shuffle(FULL_ROUNDS);
     }
 
     //used for row 0
-    public void reducedSqueezeRow(long[] out) {
+    private void reducedSqueezeRow(long[] out) {
         int iterator = 0;
-        for (int i = 0; i < Parameters.N_COLS; i++) {
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+        for (int i = 0; i < N_COLS; i++) {
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 out[iterator] = state[j];
                 iterator++;
             }
-            shuffle(Parameters.HALF_ROUNDS);
+            shuffle(HALF_ROUNDS);
         }
     }
 
-    public void reducedDuplexRow1And2(long[] out, long[] in) {
+    private void reducedDuplexRow1And2(long[] out, long[] in) {
         int iteratorIn = 0, iteratorOut = 0;
-        for (int i = 0; i < Parameters.N_COLS; i++) {
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
+        for (int i = 0; i < N_COLS; i++) {
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 state[j] ^= in[iteratorIn];
                 iteratorIn++;
             }
-            iteratorIn -= Parameters.BLOCK_LENGTH_IN_LONG;
-            shuffle(Parameters.HALF_ROUNDS);
-            for (int j = Parameters.BLOCK_LENGTH_IN_LONG - 1; j >= 0; j--) {
+            iteratorIn -= BLOCK_LENGTH_IN_LONG;
+            shuffle(HALF_ROUNDS);
+            for (int j = BLOCK_LENGTH_IN_LONG - 1; j >= 0; j--) {
                 out[iteratorOut] = state[j] ^ in[iteratorIn];
                 iteratorIn++;
                 iteratorOut--;
@@ -137,44 +165,44 @@ public class Blake2BSponge {
         }
     }
 
-    public void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
-        for (int i = 0; i < Parameters.N_COLS; i++) {
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
-                state[j] ^= row1[offset + j] + prev0[offset + j] + prev1[offset + j];
+    private void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+        for (int i = 0; i < N_COLS; i++) {
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * BLOCK_LENGTH_IN_LONG;
+                state[j] ^= addWordwise(row1[offset + j], prev0[offset + j], prev1[offset + j]);
 
             }
-            shuffle(Parameters.HALF_ROUNDS);
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
-                row0[(Parameters.N_COLS - 1 - i) * Parameters.BLOCK_LENGTH_IN_LONG + j]
+            shuffle(HALF_ROUNDS);
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * BLOCK_LENGTH_IN_LONG;
+                row0[(N_COLS - 1 - i) * BLOCK_LENGTH_IN_LONG + j]
                         = prev0[offset + j] ^ state[j];
             }
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
-                row1[offset + j] ^= state[(j + 2) % Parameters.BLOCK_LENGTH_IN_LONG];
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                int offset = i * BLOCK_LENGTH_IN_LONG;
+                row1[offset + j] ^= state[(j + 2) % BLOCK_LENGTH_IN_LONG];
             }
         }
     }
 
-    public void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
-        for (int i = 0; i < Parameters.N_COLS; i++) {
+    private void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+        for (int i = 0; i < N_COLS; i++) {
             int col0 = (int) Long.remainderUnsigned(switchEndian(state[4]),
-                    Parameters.N_COLS) * Parameters.BLOCK_LENGTH_IN_LONG;
+                    N_COLS) * BLOCK_LENGTH_IN_LONG;
             int col1 = (int) Long.remainderUnsigned(switchEndian(state[6]),
-                    Parameters.N_COLS) * Parameters.BLOCK_LENGTH_IN_LONG;
-            int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                state[j] ^= row0[offset + j] + row1[offset + j]
-                        + prev0[Parameters.BLOCK_LENGTH_IN_LONG * i + j]
-                        + prev1[Parameters.BLOCK_LENGTH_IN_LONG * i + j];
+                    N_COLS) * BLOCK_LENGTH_IN_LONG;
+            int offset = i * BLOCK_LENGTH_IN_LONG;
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                state[j] ^= addWordwise(row0[offset + j], row1[offset + j]
+                        , prev0[BLOCK_LENGTH_IN_LONG * col0 + j]
+                        , prev1[BLOCK_LENGTH_IN_LONG * col1 + j]);
             }
-            shuffle(Parameters.HALF_ROUNDS);
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                row0[offset+j]^=state[j];
+            shuffle(HALF_ROUNDS);
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                row0[offset + j] ^= state[j];
             }
-            for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
-                row1[offset+j]^=state[(j+2)%Parameters.BLOCK_LENGTH_IN_LONG];
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
+                row1[offset + j] ^= state[(j + 2) % BLOCK_LENGTH_IN_LONG];
             }
         }
     }
