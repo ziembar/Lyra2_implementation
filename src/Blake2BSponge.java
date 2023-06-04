@@ -68,11 +68,11 @@ public class Blake2BSponge {
         state[b] = (state[b] ^ state[c]) >> 63;
     }
 
-    private void squeeze(byte[] out, int ammount) {
+    public void squeeze(byte[] out, int amount) {
         int iterator = 0;
         //whole blocks
-        int numberOfBlocks = ammount / Parameters.BLOCK_LENGTH_IN_BYTES;
-        int rest = ammount % Parameters.BLOCK_LENGTH_IN_BYTES;
+        int numberOfBlocks = amount / Parameters.BLOCK_LENGTH_IN_BYTES;
+        int rest = amount % Parameters.BLOCK_LENGTH_IN_BYTES;
         for (int i = 0; i < numberOfBlocks; i++) {
             for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
                 byte[] bytes = longToBytes(state[j]);
@@ -101,7 +101,7 @@ public class Blake2BSponge {
         }
     }
 
-    private void absorbBlock(long[] in, int length) {
+    public void absorbBlock(long[] in, int length) {
         for (int i = 0; i < length; i++) {
             state[i] ^= in[i];
         }
@@ -109,7 +109,7 @@ public class Blake2BSponge {
     }
 
     //used for row 0
-    private void reducedSqueezeRow(long[] out) {
+    public void reducedSqueezeRow(long[] out) {
         int iterator = 0;
         for (int i = 0; i < Parameters.N_COLS; i++) {
             for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
@@ -120,7 +120,7 @@ public class Blake2BSponge {
         }
     }
 
-    private void reducedDuplexRow1And2(long[] out, long[] in) {
+    public void reducedDuplexRow1And2(long[] out, long[] in) {
         int iteratorIn = 0, iteratorOut = 0;
         for (int i = 0; i < Parameters.N_COLS; i++) {
             for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
@@ -137,7 +137,7 @@ public class Blake2BSponge {
         }
     }
 
-    private void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+    public void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
         for (int i = 0; i < Parameters.N_COLS; i++) {
             for (int j = 0; j < Parameters.BLOCK_LENGTH_IN_LONG; j++) {
                 int offset = i * Parameters.BLOCK_LENGTH_IN_LONG;
@@ -157,7 +157,7 @@ public class Blake2BSponge {
         }
     }
 
-    private void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
+    public void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
         for (int i = 0; i < Parameters.N_COLS; i++) {
             int col0 = (int) Long.remainderUnsigned(switchEndian(state[4]),
                     Parameters.N_COLS) * Parameters.BLOCK_LENGTH_IN_LONG;
