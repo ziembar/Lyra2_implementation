@@ -1,8 +1,7 @@
 public class Parameters {
     public static int N_COLS;
-    public static int N_ROWS;
     public static final int TIME_COST = 5;
-    public static final int MEMORY_COST = 100;
+    public static final int MEMORY_COST = 16;
     public static final int KEY_LENGTH = 64;
     public static final int FULL_ROUNDS = 12;
     public static final int HALF_ROUNDS = FULL_ROUNDS/2;
