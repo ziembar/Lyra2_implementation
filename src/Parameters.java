@@ -1,5 +1,5 @@
 public class Parameters {
-    public static int N_COLS;
+    public static int N_COLS = 64;
     public static final int TIME_COST = 5;
     public static final int MEMORY_COST = 16;
     public static final int KEY_LENGTH = 64;
