@@ -138,8 +138,9 @@ public class Blake2BSponge {
 
     //used for row 0
     public void reducedSqueezeRow(long[] out) {
-        int iterator = 0;
+
         for (int i = 0; i < N_COLS; i++) {
+            int iterator = 0;
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 out[iterator] = state[j];
                 iterator++;
@@ -149,18 +150,19 @@ public class Blake2BSponge {
     }
 
     public void reducedDuplexRow1And2(long[] out, long[] in) {
-        int iteratorIn = 0, iteratorOut = 0;
+        int iteratorIn = 0;
         for (int i = 0; i < N_COLS; i++) {
+            int iteratorOut = (N_COLS - 1 - i) * BLOCK_LENGTH_IN_LONG;
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 state[j] ^= in[iteratorIn];
                 iteratorIn++;
             }
             iteratorIn -= BLOCK_LENGTH_IN_LONG;
             shuffle(HALF_ROUNDS);
-            for (int j = BLOCK_LENGTH_IN_LONG - 1; j >= 0; j--) {
+            for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 out[iteratorOut] = state[j] ^ in[iteratorIn];
                 iteratorIn++;
-                iteratorOut--;
+                iteratorOut++;
             }
         }
     }

@@ -16,10 +16,9 @@ public class Lyra2 {
     /**
      * Compute password hash using salt and other parameters.
      *
-     * @param pass   a password that was converted to byte form
-     * @param salt   a salt (defeats ahead-of-time hash computation)
+     * @param pass a password that was converted to byte form
+     * @param salt a salt (defeats ahead-of-time hash computation)
      */
-
 
 
     public static String phs(String pass, String salt) {
@@ -62,7 +61,8 @@ public class Lyra2 {
                 // So, mask the result of an upcast to last byte only
                 l |= (bytes[i * 8 + j] & 0x00000000000000FFL);
 
-            } l |= bytes[i * 8 + 7] & 0x00000000000000FFL;
+            }
+            l |= bytes[i * 8 + 7] & 0x00000000000000FFL;
 
             longs[i] = l;
         }
@@ -74,7 +74,8 @@ public class Lyra2 {
                 l |= (bytes[div * 8 + i] & 0x00000000000000FFL);
 
                 l <<= 8;
-            } l |= (bytes[div * 8 + mod - 1] & 0x00000000000000FFL);
+            }
+            l |= (bytes[div * 8 + mod - 1] & 0x00000000000000FFL);
 
             l <<= (8 * (8 - mod));
 
@@ -85,8 +86,8 @@ public class Lyra2 {
     }
 
 
-        private static byte[] stringToBytes(String data){
-            return data.getBytes();
+    private static byte[] stringToBytes(String data) {
+        return data.getBytes();
     }
 
     public static byte[] intToBytes(int number) {
@@ -98,7 +99,6 @@ public class Lyra2 {
 
         return byteArray;
     }
-
 
 
     private static byte[] concatenateBytes(byte[]... arrays) {
@@ -120,16 +120,16 @@ public class Lyra2 {
     /**
      * Compute password hash using salt and other parameters.
      *
-     * @param hash   byte array that will contain computed hash
-     * @param pass   a password that was converted to byte form
-     * @param salt   a salt (defeats ahead-of-time hash computation)
+     * @param hash byte array that will contain computed hash
+     * @param pass a password that was converted to byte form
+     * @param salt a salt (defeats ahead-of-time hash computation)
      */
     public static void hash(byte[] hash, byte[] pass, byte[] salt) {
-        byte[] initData = padding(concatenateBytes(pass,salt, intToBytes(Parameters.KEY_LENGTH),
+        byte[] initData = padding(concatenateBytes(pass, salt, intToBytes(Parameters.KEY_LENGTH),
                 intToBytes(pass.length), intToBytes(salt.length), intToBytes(Parameters.TIME_COST),
-                intToBytes(Parameters.ROW_LENGTH_IN_BYTES * 8),intToBytes(Parameters.N_COLS)));
+                intToBytes(Parameters.ROW_LENGTH_IN_BYTES * 8), intToBytes(Parameters.N_COLS)));
 
-        long[][] matrix = new long[Parameters.ROW_LENGTH_IN_BYTES*8][Parameters.N_COLS];
+        long[][] matrix = new long[Parameters.ROW_LENGTH_IN_BYTES * 8][Parameters.N_COLS];
         Blake2BSponge sponge = new Blake2BSponge();
 
         long[] packedInit = packToLongs(initData);
@@ -149,22 +149,22 @@ public class Lyra2 {
 
         int row0;
 
-        for(row0 = 3; row0 < Parameters.ROW_LENGTH_IN_BYTES * 8; row0++){
+        for (row0 = 3; row0 < Parameters.ROW_LENGTH_IN_BYTES * 8; row0++) {
             sponge.reducedDuplexFillingLoop(matrix[row1], matrix[row0], matrix[prev0], matrix[prev1]);
             prev0 = row0;
             prev1 = row1;
             row1 = (row1 + stp) % wnd;
-            if (row1 == 0){
+            if (row1 == 0) {
                 wnd *= 2;
                 stp = sqrt + gap;
                 gap = -gap;
-                if(gap == -1){
+                if (gap == -1) {
                     sqrt *= 2;
                 }
             }
         }
 
-        for(int wCount = 0; wCount < Parameters.ROW_LENGTH_IN_BYTES * 8; wCount++){
+        for (int wCount = 0; wCount < Parameters.ROW_LENGTH_IN_BYTES * 8; wCount++) {
             row0 = (int) sponge.state[0] % Parameters.ROW_LENGTH_IN_BYTES * 8;
             row1 = (int) sponge.state[2] % Parameters.ROW_LENGTH_IN_BYTES * 8;
             sponge.reducedDuplexWandering(matrix[row1], matrix[row0], matrix[prev1], matrix[prev0]);
@@ -176,7 +176,8 @@ public class Lyra2 {
 
         sponge.squeeze(hash, Parameters.KEY_LENGTH);
     }
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
         Lyra2 lyra = new Lyra2();
         lyra.phs("bolec", "123");
     }
