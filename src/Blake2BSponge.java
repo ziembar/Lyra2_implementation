@@ -1,40 +1,59 @@
 import java.nio.ByteBuffer;
 
+/**
+ * Klasa Blake2bSponge reprezentuje strukturę gąbki kryptograficznej,
+ * korzystającej z algorytmu Blake2b jako swojej funkcji trnsformującej f
+ */
 public class Blake2BSponge {
+    /**
+     * Tablica zmiennych typu long reprezentująca aktualny stan wewnętrzny gąbki
+     */
     long[] state;
+
+    //Przepisywanie zmiennych początkowych z klasy Parameters
+    /////////////////////////////////////////
     private final int BLOCK_LENGTH_IN_LONG;
     private final int BLOCK_LENGTH_IN_BYTES;
     private final int N_COLS;
     private final int FULL_ROUNDS;
     private final int HALF_ROUNDS;
+    /////////////////////////////////////////
 
-    public long addWordwise(long a, long b, long c, long d) {
-        return switchEndian(
-                switchEndian(a)
-                        + switchEndian(b)
-                        + switchEndian(c)
-                        + switchEndian(d));
+    /**
+     * Metoda dodająca określoną liczbę wyrazów (long).
+     * Zamiana kolejności bajtów w liczbach wynika z faktu, iż oryginalny algorytm,
+     * w odróżnieniu od sposobu zapisywania liczb w Javie, korzysta z Little-Endian.
+     *
+     * @param longs wyrazy, które mają zostać zsumowane
+     * @return wynik sumowania wyrazów w long
+     */
+    public long addWordwise(long... longs) {
+        long result = 0;
+        for (long l : longs) {
+            result += switchEndian(l);
+        }
+        return switchEndian(result);
     }
 
-    public long addWordwise(long a, long b, long c) {
-        return switchEndian(
-                switchEndian(a)
-                        + switchEndian(b)
-                        + switchEndian(c));
-    }
-
-    public long addWordwise(long a, long b) {
-        return switchEndian(
-                switchEndian(a)
-                        + switchEndian(b));
-    }
-
+    /**
+     * Metoda zamieniająca zmienną typu long na tablicę typy byte
+     *
+     * @param x podana zmienna typu long
+     * @return tablica byte otrzymana w wyniku podziału podanej zmiennej
+     */
     public byte[] longToBytes(long x) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(x);
         return buffer.array();
     }
 
+    /**
+     * Metoda zmieniająca kolejność bajtów w zmiennej typu long
+     * z Big-Endian na Little-Endian oraz odwrotnie
+     *
+     * @param x zmienna, w której należy zmienić kolejność bajtów
+     * @return zmienna z zamienioną kolejnością bajtów
+     */
     public long switchEndian(final long x) {
         return (x & 0x00000000000000FFL) << 56
                 | (x & 0x000000000000FF00L) << 40
@@ -46,6 +65,10 @@ public class Blake2BSponge {
                 | (x & 0xFF00000000000000L) >>> 56;
     }
 
+    /**
+     * Wektor początkowy funkcji Blake2b, używany do określenia
+     * początkowego stanu gąbki
+     */
     long[] InitiazationVector = {
             0x6a09e667f3bcc908L,
             0xbb67ae8584caa73bL,
@@ -56,6 +79,10 @@ public class Blake2BSponge {
             0x1f83d9abfb41bd6bL,
             0x5be0cd19137e2179L};
 
+    /**
+     * Konstruktor gąbki inicjalizujący jej pocżątkowy stan oraz przypisujący
+     * do zmiennych zadane parametry działania algorytmu zabezpieczania.
+     */
     public Blake2BSponge() {
         this.BLOCK_LENGTH_IN_LONG = Parameters.BLOCK_LENGTH_IN_LONG;
         this.BLOCK_LENGTH_IN_BYTES = Parameters.BLOCK_LENGTH_IN_BYTES;
@@ -69,6 +96,13 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda dokonująca przemieszania stanu gąbki, zgodnie z zasadami
+     * działania algorytmu Blake2b, zadaną ilość razy.
+     * Wyrazy, dla których wywoływana jest funkcja G nie zą dobierane losowo.
+     *
+     * @param rounds ilość rund określająca, ile razy zostanie wykonane przemieszanie stanu gąbki
+     */
     private void shuffle(int rounds) {
         for (int i = 0; i < rounds; i++) {
             functionG(0, 4, 8, 12);
@@ -82,6 +116,17 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda używana podczas mieszania stanu wewnętrznego,
+     * która zmienia wartość zadanych wyrazów zgodnie z zasadami algorytmu BLake2b.
+     * Zmiana kolejności bajtów po raz kolejny wynika z różnic w zapisie używanym
+     * w algorytmie oraz tym używanym w Javie.
+     *
+     * @param a zadany wyraz
+     * @param b zadany wyraz
+     * @param c zadany wyraz
+     * @param d zadany wyraz
+     */
     private void functionG(int a, int b, int c, int d) {
         state[a] = addWordwise(state[a], state[b]);
         state[d] = switchEndian(Long.rotateRight(switchEndian(state[d] ^ state[a]), 32));
@@ -96,6 +141,13 @@ public class Blake2BSponge {
         state[b] = switchEndian(Long.rotateRight(switchEndian(state[b] ^ state[c]), 63));
     }
 
+    /**
+     * Metoda odpowiedzialna za "wyciśnięcie" z gąbki zadanej ilości bajtów
+     * do podanej tablicy
+     *
+     * @param out    tablica, do której zostaną "wyciśnięte" bajty
+     * @param amount ilość "wyciskanych" bajtów
+     */
     public void squeeze(byte[] out, int amount) {
         int iterator = 0;
         //whole blocks
@@ -129,6 +181,13 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda odpowiedzialna za absorbowanie jednego bloku podanego
+     * w postaci tablicy long
+     *
+     * @param in     tablica podana do absorbowania
+     * @param length ilość zmiennych typu long do absorbowania
+     */
     public void absorbBlock(long[] in, int length) {
         for (int i = 0; i < length; i++) {
             state[i] ^= in[i];
@@ -136,7 +195,12 @@ public class Blake2BSponge {
         shuffle(FULL_ROUNDS);
     }
 
-    //used for row 0
+    /**
+     * Metoda odpowiedzialna za "wyciśnięcie" z gąbki całego rzędu macierzy pamięci.
+     * Używana dla rzędu zerowego podczas inicjalizowania macierzy pamięci
+     *
+     * @param out
+     */
     public void reducedSqueezeRow(long[] out) {
 
         for (int i = 0; i < N_COLS; i++) {
@@ -149,6 +213,15 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda dupleksująca dla gąbki ze zredukowaną liczbą rund,
+     * używana podczas inicjalizowania macierzy pamięci.
+     * Używana tylko dla pierwszego i drugiegu rzędy macierzy.
+     * Odpowiednio użyta wykonuje w pełni dziewiątą i dziesiątą linijkę pseudokodu.
+     *
+     * @param out tablica, do której zostaną wrzucone wartości (efekt operacji)
+     * @param in  tablica, z której brane są wartości konieczne do przeprowadzenia operacji
+     */
     public void reducedDuplexRow1And2(long[] out, long[] in) {
         int iteratorIn = 0;
         for (int i = 0; i < N_COLS; i++) {
@@ -167,6 +240,16 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda dupleksująca dla gąbki ze zredukowaną liczbą rund,
+     * używana podczas fazy "Filling Loop".
+     * Odpowiednio użyta wykonuje w pełni od 13. do 17. linijki pseudokodu.
+     *
+     * @param row1  tablica zawierająca rząd o indeksie row1
+     * @param row0  tablica zawierająca rząd o indeksie row0
+     * @param prev0 tablica zawierająca rząd o indeksie prev0
+     * @param prev1 tablica zawierająca rząd o indeksie prev1
+     */
     public void reducedDuplexFillingLoop(long[] row1, long[] row0, long[] prev0, long[] prev1) {
         for (int i = 0; i < N_COLS; i++) {
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
@@ -187,6 +270,16 @@ public class Blake2BSponge {
         }
     }
 
+    /**
+     * Metoda dupleksująca dla gąbki ze zredukowaną liczbą rund,
+     * używana podczas fazy "Wandering Phase".
+     * Odpowiednio użyta wykonuje w pełni od 29. do 35. linijki pseudokodu.
+     *
+     * @param row1  tablica zawierająca rząd o indeksie row1
+     * @param row0  tablica zawierająca rząd o indeksie row0
+     * @param prev0 tablica zawierająca rząd o indeksie prev0
+     * @param prev1 tablica zawierająca rząd o indeksie prev1
+     */
     public void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
         for (int i = 0; i < N_COLS; i++) {
             int col0 = (int) Long.remainderUnsigned(switchEndian(state[4]),
