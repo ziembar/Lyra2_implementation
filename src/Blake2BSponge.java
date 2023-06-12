@@ -56,12 +56,12 @@ public class Blake2BSponge {
             0x1f83d9abfb41bd6bL,
             0x5be0cd19137e2179L};
 
-    public Blake2BSponge() {
-        this.BLOCK_LENGTH_IN_LONG = Parameters.BLOCK_LENGTH_IN_LONG;
-        this.BLOCK_LENGTH_IN_BYTES = Parameters.BLOCK_LENGTH_IN_BYTES;
-        this.N_COLS = Parameters.N_COLS;
-        this.FULL_ROUNDS = Parameters.FULL_ROUNDS;
-        this.HALF_ROUNDS = Parameters.HALF_ROUNDS;
+    public Blake2BSponge(Parameters params) {
+        this.BLOCK_LENGTH_IN_LONG = params.BLOCK_LENGTH_IN_LONG;
+        this.BLOCK_LENGTH_IN_BYTES = params.BLOCK_LENGTH_IN_BYTES;
+        this.N_COLS = params.N_COLS;
+        this.FULL_ROUNDS = params.FULL_ROUNDS;
+        this.HALF_ROUNDS = params.HALF_ROUNDS;
         state = new long[16];
         for (int i = 0; i < 8; i++) {
             state[i] = 0;
@@ -129,11 +129,11 @@ public class Blake2BSponge {
         }
     }
 
-    public void absorbBlock(long[] in, int length) {
-        for (int i = 0; i < length; i++) {
-            state[i] ^= in[i];
-        }
+    public void absorbBlock(long[] in) {
         shuffle(FULL_ROUNDS);
+        for (int i = 0; i < in.length; i++) {
+            state[i%state.length] ^= in[i];
+        }
     }
 
     //used for row 0
@@ -196,8 +196,8 @@ public class Blake2BSponge {
             int offset = i * BLOCK_LENGTH_IN_LONG;
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 state[j] ^= addWordwise(row0[offset + j], row1[offset + j]
-                        , prev0[BLOCK_LENGTH_IN_LONG * col0 + j]
-                        , prev1[BLOCK_LENGTH_IN_LONG * col1 + j]);
+                        , prev0[/*BLOCK_LENGTH_IN_LONG * */ col0 + j]
+                        , prev1[/*BLOCK_LENGTH_IN_LONG * */ col1 + j]);
             }
             shuffle(HALF_ROUNDS);
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
