@@ -185,16 +185,13 @@ public class Blake2BSponge {
      * Metoda odpowiedzialna za absorbowanie jednego bloku podanego
      * w postaci tablicy long
      *
-     * @param in     tablica podana do absorbowania
+     * @param in tablica podana do absorbowania
      */
-    public void absorbBlock(long[] in) {
-        for (int i = 0; i < in.length; i++) {
-            state[i%state.length] ^= in[i];
+    public void absorbBlock(long[] in, int length) {
+        for (int i = 0; i < length; i++) {
+            state[i] ^= in[i];
         }
         shuffle(FULL_ROUNDS);
-        for (int i = 0; i < in.length; i++) {
-            state[i%state.length] ^= in[i];
-        }
     }
 
     /**
@@ -291,8 +288,8 @@ public class Blake2BSponge {
             int offset = i * BLOCK_LENGTH_IN_LONG;
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 state[j] ^= addWordwise(row0[offset + j], row1[offset + j]
-                        , prev0[/*BLOCK_LENGTH_IN_LONG * */ col0 + j]
-                        , prev1[/*BLOCK_LENGTH_IN_LONG * */ col1 + j]);
+                        , prev0[BLOCK_LENGTH_IN_LONG * col0 + j]
+                        , prev1[BLOCK_LENGTH_IN_LONG * col1 + j]);
             }
             shuffle(HALF_ROUNDS);
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {

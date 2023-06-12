@@ -1,7 +1,7 @@
 /**
  * Klasa zawierająca parametry początkowe algorytmu.
- * Wszystkie zmienne są statyczne i końcowe,
- * gdyż są używane w różnych klasach i nie ulegają zmianie w trakcie działanie algorytmu.
+ * Wszystkie zmienne są statyczne,
+ * gdyż są używane w różnych klasach i nie ulegają zmianie w trakcie działania algorytmu.
  */
 public class Parameters {
     /**

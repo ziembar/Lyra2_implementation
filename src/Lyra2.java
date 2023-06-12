@@ -5,6 +5,10 @@ public class Lyra2 {
     private static int N_COLS;
     private static int FULL_ROUNDS;
     private static int HALF_ROUNDS;
+    private static int TIME_COST;
+    private static int ROW_LENGTH_IN_BYTES;
+    private static int MEMORY_COST;
+    private static int ROW_LENGTH_IN_LONG;
     private static Blake2BSponge sponge;
 
 
@@ -15,6 +19,11 @@ public class Lyra2 {
         this.FULL_ROUNDS = params.FULL_ROUNDS;
         this.HALF_ROUNDS = params.HALF_ROUNDS;
         this.KEY_LENGTH = params.KEY_LENGTH;
+        this.TIME_COST = params.TIME_COST;
+        this.ROW_LENGTH_IN_BYTES = params.ROW_LENGTH_IN_BYTES;
+        this.MEMORY_COST = params.MEMORY_COST;
+        this.ROW_LENGTH_IN_LONG = params.ROW_LENGTH_IN_LONG;
+
         this.sponge = new Blake2BSponge(params);
     }
 
@@ -135,16 +144,16 @@ public class Lyra2 {
      * @param salt a salt (defeats ahead-of-time hash computation)
      */
     public static void hash(byte[] hash, byte[] pass, byte[] salt) {
-        byte[] initData = padding(concatenateBytes(pass, salt, intToBytes(Parameters.KEY_LENGTH),
-                intToBytes(pass.length), intToBytes(salt.length), intToBytes(Parameters.TIME_COST),
-                intToBytes(Parameters.ROW_LENGTH_IN_BYTES * 8), intToBytes(Parameters.N_COLS)));
+        byte[] initData = padding(concatenateBytes(pass, salt, intToBytes(KEY_LENGTH),
+                intToBytes(pass.length), intToBytes(salt.length), intToBytes(TIME_COST),
+                intToBytes(MEMORY_COST), intToBytes(N_COLS)));
 
-        long[][] matrix = new long[Parameters.ROW_LENGTH_IN_BYTES * 8][Parameters.N_COLS * Parameters.BLOCK_LENGTH_IN_LONG];
+        long[][] matrix = new long[MEMORY_COST][ROW_LENGTH_IN_LONG];
 
 
         long[] packedInit = packToLongs(initData);
 
-        sponge.absorbBlock(packedInit);
+        sponge.absorbBlock(packedInit,1);
 
         int gap = 1;
         int stp = 1;
@@ -160,7 +169,7 @@ public class Lyra2 {
 
         int row0;
 
-        for (row0 = 3; row0 < Parameters.ROW_LENGTH_IN_BYTES * 8; row0++) {
+        for (row0 = 3; row0 < MEMORY_COST; row0++) {
             sponge.reducedDuplexFillingLoop(matrix[row1], matrix[row0], matrix[prev0], matrix[prev1]);
             prev0 = row0;
             prev1 = row1;
@@ -175,17 +184,17 @@ public class Lyra2 {
             }
         }
 
-        for (int wCount = 0; wCount < Parameters.TIME_COST * Parameters.MEMORY_COST; wCount++) {
-            row0 = (int) Long.remainderUnsigned(sponge.state[0], Parameters.ROW_LENGTH_IN_BYTES * 8);
-            row1 = (int) Long.remainderUnsigned(sponge.state[2], Parameters.ROW_LENGTH_IN_BYTES * 8);
+        for (int wCount = 0; wCount < TIME_COST * MEMORY_COST; wCount++) {
+            row0 = (int) Long.remainderUnsigned(sponge.state[0], MEMORY_COST);
+            row1 = (int) Long.remainderUnsigned(sponge.state[2], MEMORY_COST);
             sponge.reducedDuplexWandering(matrix[row1], matrix[row0], matrix[prev1], matrix[prev0]);
             prev0 = row0;
             prev1 = row1;
         }
 
-        sponge.absorbBlock(matrix[row0]);
+        sponge.absorbBlock(matrix[row0],1);
 
-        sponge.squeeze(hash, Parameters.KEY_LENGTH);
+        sponge.squeeze(hash, KEY_LENGTH);
     }
 
     public static void main(String[] args) {
