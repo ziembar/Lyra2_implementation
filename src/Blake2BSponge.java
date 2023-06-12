@@ -186,11 +186,10 @@ public class Blake2BSponge {
      * w postaci tablicy long
      *
      * @param in     tablica podana do absorbowania
-     * @param length ilość zmiennych typu long do absorbowania
      */
-    public void absorbBlock(long[] in, int length) {
-        for (int i = 0; i < length; i++) {
-            state[i] ^= in[i];
+    public void absorbBlock(long[] in) {
+        for (int i = 0; i < in.length; i++) {
+            state[i%state.length] ^= in[i];
         }
         shuffle(FULL_ROUNDS);
         for (int i = 0; i < in.length; i++) {
