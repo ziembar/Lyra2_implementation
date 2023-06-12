@@ -112,8 +112,8 @@ public class Lyra2 {
     public static byte[] intToBytes(int number) {
         byte[] byteArray = new byte[4]; // Tworzenie tablicy bajtów o rozmiarze 4 (int ma 4 bajty)
 
-        for (int i = 0; i < 4; i++) {
-            byteArray[i] = (byte) (number >>> (i * 8)); // Konwersja int na bajty
+        for (int i = 3; i >= 0; i--) {
+            byteArray[3-i] = (byte) (number >>> (i * 8)); // Konwersja int na bajty
         }
 
         return byteArray;
