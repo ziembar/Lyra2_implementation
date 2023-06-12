@@ -186,10 +186,12 @@ public class Blake2BSponge {
      * w postaci tablicy long
      *
      * @param in tablica podana do absorbowania
+     * @param length długość absorbowanej tablicy
+     * @param offset wyraz od którego należy zacząć absorbowanie bloku zawartego w tablicy in
      */
-    public void absorbBlock(long[] in, int length) {
+    public void absorbBlock(long[] in, int length, int offset) {
         for (int i = 0; i < length; i++) {
-            state[i] ^= in[i];
+            state[i] ^= in[i+offset];
         }
         shuffle(FULL_ROUNDS);
     }
@@ -198,7 +200,7 @@ public class Blake2BSponge {
      * Metoda odpowiedzialna za "wyciśnięcie" z gąbki całego rzędu macierzy pamięci.
      * Używana dla rzędu zerowego podczas inicjalizowania macierzy pamięci
      *
-     * @param out
+     * @param out rząd zerowy macierzy poddawany operacji zredukowanego "wyciśnięcia"
      */
     public void reducedSqueezeRow(long[] out) {
 
@@ -282,9 +284,9 @@ public class Blake2BSponge {
     public void reducedDuplexWandering(long[] row1, long[] row0, long[] prev0, long[] prev1) {
         for (int i = 0; i < N_COLS; i++) {
             int col0 = (int) Long.remainderUnsigned(switchEndian(state[4]),
-                    N_COLS) * BLOCK_LENGTH_IN_LONG;
+                    N_COLS);
             int col1 = (int) Long.remainderUnsigned(switchEndian(state[6]),
-                    N_COLS) * BLOCK_LENGTH_IN_LONG;
+                    N_COLS);
             int offset = i * BLOCK_LENGTH_IN_LONG;
             for (int j = 0; j < BLOCK_LENGTH_IN_LONG; j++) {
                 state[j] ^= addWordwise(row0[offset + j], row1[offset + j]

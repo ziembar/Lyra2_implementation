@@ -152,8 +152,11 @@ public class Lyra2 {
 
 
         long[] packedInit = packToLongs(initData);
+        for (int i =0;i<packedInit.length/BLOCK_LENGTH_IN_LONG;i++){
+            int offset = i*BLOCK_LENGTH_IN_LONG;
+            sponge.absorbBlock(packedInit,BLOCK_LENGTH_IN_LONG,offset);
+        }
 
-        sponge.absorbBlock(packedInit,1);
 
         int gap = 1;
         int stp = 1;
@@ -192,7 +195,7 @@ public class Lyra2 {
             prev1 = row1;
         }
 
-        sponge.absorbBlock(matrix[row0],1);
+        sponge.absorbBlock(matrix[row0],BLOCK_LENGTH_IN_LONG,0);
 
         sponge.squeeze(hash, KEY_LENGTH);
     }
