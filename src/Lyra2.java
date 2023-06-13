@@ -166,9 +166,9 @@ public class Lyra2 {
 
 
         long[] packedInit = packToLongs(initData);
-        for (int i =0;i<packedInit.length/BLOCK_LENGTH_IN_LONG;i++){
-            int offset = i*BLOCK_LENGTH_IN_LONG;
-            sponge.absorbBlock(packedInit,BLOCK_LENGTH_IN_LONG,offset);
+        for (int i = 0; i < packedInit.length / BLOCK_LENGTH_IN_LONG; i++) {
+            int offset = i * BLOCK_LENGTH_IN_LONG;
+            sponge.absorbBlock(packedInit, BLOCK_LENGTH_IN_LONG, offset);
         }
 
 
@@ -225,6 +225,7 @@ public class Lyra2 {
         );
 
         Lyra2 lyra = new Lyra2(params);
-        System.out.println(lyra.phsString("pwd", "kloc"));
+        System.out.println(lyra.phsString("p", "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"));
+
     }
 }

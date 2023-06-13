@@ -8,9 +8,9 @@ class Blake2BSpongeTest {
 
     @BeforeEach
     void setup() {
-//        Parameters params = new Parameters();
-//        params.FULL_ROUNDS = 0;
- //       sponge = new Blake2BSponge(params);
+        Parameters params = new Parameters(10,5,4,10,12,8);
+        params.FULL_ROUNDS = 0;
+        sponge = new Blake2BSponge(params);
         for (int i = 0; i < sponge.state.length; i++) {
             sponge.state[i] = i;
         }
@@ -26,7 +26,7 @@ class Blake2BSpongeTest {
     @org.junit.jupiter.api.Test
     void longToBytes() {
         long a = 1, b = 11111111;
-        byte[] a1 = {0, 0, 0, 0, 0, 0, 0, 1}, b1 = {0, 0, 0, 0, 0, (byte)169, (byte)138, (byte)199};
+        byte[] a1 = {0, 0, 0, 0, 0, 0, 0, 1}, b1 = {0, 0, 0, 0, 0, (byte) 169, (byte) 138, (byte) 199};
         assertArrayEquals(sponge.longToBytes(a), a1);
         assertArrayEquals(sponge.longToBytes(b), b1);
     }
@@ -42,17 +42,17 @@ class Blake2BSpongeTest {
     @org.junit.jupiter.api.Test
     void squeeze() {
         byte[] result = new byte[16];
-        sponge.squeeze(result,16);
-        byte[] expected = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
-        assertArrayEquals(result,expected);
+        sponge.squeeze(result, 16);
+        byte[] expected = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        assertArrayEquals(result, expected);
     }
 
     @org.junit.jupiter.api.Test
     void absorbBlock() {
-        long[] block = {1,2,3,4,5,6,7,8};
-        sponge.absorbBlock(block,8,0);
-        long[] result={1,3,1,7,1,3,1,15,8,9,10,11,12,13,14,15};
-        assertArrayEquals(sponge.state,result);
+        long[] block = {1, 2, 3, 4, 5, 6, 7, 8};
+        sponge.absorbBlock(block, 8, 0);
+        long[] result = {1, 3, 1, 7, 1, 3, 1, 15, 8, 9, 10, 11, 12, 13, 14, 15};
+        assertArrayEquals(sponge.state, result);
     }
 
 }

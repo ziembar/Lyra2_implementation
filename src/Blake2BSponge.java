@@ -185,13 +185,13 @@ public class Blake2BSponge {
      * Metoda odpowiedzialna za absorbowanie jednego bloku podanego
      * w postaci tablicy long
      *
-     * @param in tablica podana do absorbowania
+     * @param in     tablica podana do absorbowania
      * @param length długość absorbowanej tablicy
      * @param offset wyraz od którego należy zacząć absorbowanie bloku zawartego w tablicy in
      */
     public void absorbBlock(long[] in, int length, int offset) {
         for (int i = 0; i < length; i++) {
-            state[i] ^= in[i+offset];
+            state[i] ^= in[i + offset];
         }
         shuffle(FULL_ROUNDS);
     }
