@@ -7,46 +7,59 @@ public class Parameters {
     /**
      * Liczba kolumn w macierzy pamięci (C)
      */
-    public static int N_COLS = 64;
+    public int N_COLS = 64;
     /**
      * Liczba określająca przybliżony czas wykonania (T)
      */
-    public static int TIME_COST = 5;
+    public int TIME_COST = 5;
     /**
      * Liczba określająca pamięć potrzebną algorytmowi,
      * a zarazem liczbę rzędów w macierzy pamięci (R)
      */
-    public static int MEMORY_COST = 16;
+    public int MEMORY_COST = 16;
     /**
      * Długość zabezpieczonego hasła w bajtach (k)
      */
-    public static int KEY_LENGTH = 64;
+    public int KEY_LENGTH = 64;
     /**
      * Pełna ilość rund używana podczas mieszania stanu wewn. gąbki;
      * zwyczajowo 12.
      */
-    public static int FULL_ROUNDS = 12;
+    public int FULL_ROUNDS = 12;
     /**
      * Zredukowana ilość rund używana podczas mieszania stanu wewn. gąbki;
      * zwyczajowo równa połowie pełnej liczbie rund
      */
-    public static int HALF_ROUNDS = FULL_ROUNDS/2;
+    public int HALF_ROUNDS;
     /**
      * Długość jednego bloku w ilości zmiennych long.
      * Wielkość bloku to wielkość jednej komórki w macierzy pamięci
      * oraz jednocześnie pojemność gąbki kryptograficznej (b)
      */
-    public static int BLOCK_LENGTH_IN_LONG = 8;
+    public int BLOCK_LENGTH_IN_LONG;
     /**
      * Długość jednego bloku w bajtach (b).
      */
-    public static int BLOCK_LENGTH_IN_BYTES = BLOCK_LENGTH_IN_LONG * 8;
+    public int BLOCK_LENGTH_IN_BYTES;
     /**
      * Długość jednego rzędu macierzy pamięci w ilości zmiennych long
      */
-    public static int ROW_LENGTH_IN_LONG = N_COLS * BLOCK_LENGTH_IN_LONG;
+    public int ROW_LENGTH_IN_LONG;
     /**
      * Długość jednego rzędu macierzy pamięci w bajtach
      */
-    public static int ROW_LENGTH_IN_BYTES = ROW_LENGTH_IN_LONG * 8;
+    public int ROW_LENGTH_IN_BYTES;
+
+    public Parameters(int n_COLS, int TIME_COST, int MEMORY_COST, int KEY_LENGTH, int FULL_ROUNDS, int BLOCK_LENGTH_IN_LONG) {
+        N_COLS = n_COLS;
+        this.TIME_COST = TIME_COST;
+        this.MEMORY_COST = MEMORY_COST;
+        this.KEY_LENGTH = KEY_LENGTH;
+        this.FULL_ROUNDS = FULL_ROUNDS;
+        this.HALF_ROUNDS = FULL_ROUNDS/2;
+        this.BLOCK_LENGTH_IN_LONG = BLOCK_LENGTH_IN_LONG;
+        this.BLOCK_LENGTH_IN_BYTES = this.BLOCK_LENGTH_IN_LONG * 8;
+        this.ROW_LENGTH_IN_LONG = N_COLS * BLOCK_LENGTH_IN_LONG;
+        this.ROW_LENGTH_IN_BYTES =  this.ROW_LENGTH_IN_LONG * 8;
+    }
 }

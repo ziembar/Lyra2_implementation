@@ -42,10 +42,10 @@ public class Lyra2 {
         return byteArrayToHexString(hash);
     }
 
-    public static String phsString(String pass, String salt) {
+    public static byte[] phs(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
-        return byteArrayToString(hash);
+        return hash;
     }
 
     public static byte[] padding(byte[] input) {
@@ -215,13 +215,9 @@ public class Lyra2 {
     }
 
     public static void main(String[] args) {
-        Parameters params = new Parameters();
-        params.KEY_LENGTH = 13;
-        params.TIME_COST = 10;
-        params.MEMORY_COST = 5;
+        Parameters params = new Parameters(256, 100, 10, 10, 12, 12);
 
         Lyra2 lyra = new Lyra2(params);
 
-        System.out.println(lyra.phsHex("hasło", "122"));
     }
 }

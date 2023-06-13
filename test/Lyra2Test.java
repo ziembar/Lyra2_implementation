@@ -5,16 +5,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class Lyra2Test {
-    Lyra2 lyra = new Lyra2(new Parameters());
+    Lyra2 lyra = new Lyra2(new Parameters(256,100,10,10,12, 8));
+    Lyra2 lyra2 = new Lyra2(new Parameters(2560,100,10,10,20, 8));
 
-    @Test
-    void phs() {
-        String pass = "test123";
-        String result;
-        result = lyra.phsString(pass, "123");
-        Assert.assertFalse(result==pass);
-        Assert.assertFalse(lyra.phsString(pass, "122")==result);
-    }
 
     @Test
     void padding() {
@@ -54,5 +47,15 @@ class Lyra2Test {
         byte[] result = lyra.intToBytes(number);
 
         Assert.assertArrayEquals(expected, result);
+    }
+
+    @Test
+    void test1(){
+        Assert.assertEquals("3D 6A 49 7B 5B 48 6F 0F 1C 8B", lyra.phsHex("password", "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"));
+    }
+
+    @Test
+    void test2(){
+        Assert.assertEquals("45 B0 8E AB 1B 51 A6 86 42 82", lyra2.phsHex("password", "123"));
     }
 }

@@ -8,9 +8,9 @@ class Blake2BSpongeTest {
 
     @BeforeEach
     void setup() {
-        Parameters params = new Parameters();
-        params.FULL_ROUNDS = 0;
-        sponge = new Blake2BSponge(params);
+//        Parameters params = new Parameters();
+//        params.FULL_ROUNDS = 0;
+ //       sponge = new Blake2BSponge(params);
         for (int i = 0; i < sponge.state.length; i++) {
             sponge.state[i] = i;
         }
