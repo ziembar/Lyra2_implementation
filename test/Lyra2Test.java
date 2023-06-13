@@ -11,9 +11,9 @@ class Lyra2Test {
     void phs() {
         String pass = "test123";
         String result;
-        result = lyra.phs(pass, "123");
+        result = lyra.phsString(pass, "123");
         Assert.assertFalse(result==pass);
-        Assert.assertFalse(lyra.phs(pass, "122")==result);
+        Assert.assertFalse(lyra.phsString(pass, "122")==result);
     }
 
     @Test
