@@ -36,13 +36,13 @@ public class Lyra2 {
      */
 
 
-    public static String phsHex(String pass, String salt) {
+    public static String phsString(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
         return byteArrayToHexString(hash);
     }
 
-    public static byte[] phs(String pass, String salt) {
+    public static byte[] phsBytes(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
         return hash;
@@ -215,10 +215,16 @@ public class Lyra2 {
     }
 
     public static void main(String[] args) {
-        Parameters params = new Parameters(256, 100, 3, 1, 12, 8);
+        Parameters params = new Parameters(
+                256,
+                100,
+                3,
+                20,
+                12,
+                8
+        );
 
         Lyra2 lyra = new Lyra2(params);
-        System.out.println(lyra.phsHex("p", "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"));
-
+        System.out.println(lyra.phsString("pwd", "kloc"));
     }
 }
