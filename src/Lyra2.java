@@ -1,3 +1,4 @@
+@SuppressWarnings("ALL")
 public class Lyra2 {
     private static int KEY_LENGTH;
     private static int BLOCK_LENGTH_IN_LONG;
@@ -35,7 +36,13 @@ public class Lyra2 {
      */
 
 
-    public static String phs(String pass, String salt) {
+    public static String phsHex(String pass, String salt) {
+        byte[] hash = new byte[KEY_LENGTH];
+        hash(hash, stringToBytes(pass), stringToBytes(salt));
+        return byteArrayToHexString(hash);
+    }
+
+    public static String phsString(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
         return byteArrayToString(hash);
@@ -119,6 +126,13 @@ public class Lyra2 {
         return byteArray;
     }
 
+    public static String byteArrayToHexString(byte[] byteArray) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : byteArray) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
+    }
 
     private static byte[] concatenateBytes(byte[]... arrays) {
         int totalLength = 0;
@@ -202,8 +216,12 @@ public class Lyra2 {
 
     public static void main(String[] args) {
         Parameters params = new Parameters();
-        params.KEY_LENGTH = 9;
+        params.KEY_LENGTH = 13;
+        params.TIME_COST = 10;
+        params.MEMORY_COST = 5;
+
         Lyra2 lyra = new Lyra2(params);
-        System.out.println(lyra.phs("bolec", "113"));
+
+        System.out.println(lyra.phsHex("hasło", "122"));
     }
 }
