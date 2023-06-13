@@ -1,3 +1,6 @@
+/**
+ * The type Lyra 2.
+ */
 @SuppressWarnings("ALL")
 public class Lyra2 {
     private static int KEY_LENGTH;
@@ -13,6 +16,11 @@ public class Lyra2 {
     private static Blake2BSponge sponge;
 
 
+    /**
+     * Instantiates a new Lyra 2.
+     *
+     * @param params the params
+     */
     public Lyra2(Parameters params) {
         this.BLOCK_LENGTH_IN_LONG = params.BLOCK_LENGTH_IN_LONG;
         this.BLOCK_LENGTH_IN_BYTES = params.BLOCK_LENGTH_IN_BYTES;
@@ -28,25 +36,27 @@ public class Lyra2 {
         this.sponge = new Blake2BSponge(params);
     }
 
+
     /**
      * Compute password hash using salt and other parameters.
      *
      * @param pass a password that was converted to byte form
      * @param salt a salt (defeats ahead-of-time hash computation)
+     * @return the string
      */
-
-
     public static String phsString(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
         return byteArrayToHexString(hash);
     }
 
+
     public static byte[] phsBytes(String pass, String salt) {
         byte[] hash = new byte[KEY_LENGTH];
         hash(hash, stringToBytes(pass), stringToBytes(salt));
         return hash;
     }
+
 
     public static byte[] padding(byte[] input) {
         int blockSize = BLOCK_LENGTH_IN_BYTES;
@@ -68,6 +78,7 @@ public class Lyra2 {
         return padded;
     }
 
+
     public static String byteArrayToString(byte[] bytes) {
         StringBuilder stringBuilder = new StringBuilder();
         for (byte b : bytes) {
@@ -75,6 +86,8 @@ public class Lyra2 {
         }
         return stringBuilder.toString();
     }
+
+
     public static long[] packToLongs(byte[] bytes) {
         int div = bytes.length / 8;
         int mod = bytes.length % 8;
@@ -116,6 +129,7 @@ public class Lyra2 {
         return data.getBytes();
     }
 
+
     public static byte[] intToBytes(int number) {
         byte[] byteArray = new byte[4]; // Tworzenie tablicy bajtów o rozmiarze 4 (int ma 4 bajty)
 
@@ -125,6 +139,7 @@ public class Lyra2 {
 
         return byteArray;
     }
+
 
     public static String byteArrayToHexString(byte[] byteArray) {
         StringBuilder sb = new StringBuilder();
@@ -214,6 +229,11 @@ public class Lyra2 {
         sponge.squeeze(hash, KEY_LENGTH);
     }
 
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
     public static void main(String[] args) {
         Parameters params = new Parameters(
                 256,

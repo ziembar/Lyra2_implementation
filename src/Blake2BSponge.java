@@ -82,6 +82,8 @@ public class Blake2BSponge {
     /**
      * Konstruktor gąbki inicjalizujący jej pocżątkowy stan oraz przypisujący
      * do zmiennych zadane parametry działania algorytmu zabezpieczania.
+     *
+     * @param params the params
      */
     public Blake2BSponge(Parameters params) {
         this.BLOCK_LENGTH_IN_LONG = params.BLOCK_LENGTH_IN_LONG;
