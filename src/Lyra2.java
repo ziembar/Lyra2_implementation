@@ -75,6 +75,7 @@ public class Lyra2 {
         }
         return stringBuilder.toString();
     }
+
     public static long[] packToLongs(byte[] bytes) {
         int div = bytes.length / 8;
         int mod = bytes.length % 8;
@@ -120,7 +121,7 @@ public class Lyra2 {
         byte[] byteArray = new byte[4]; // Tworzenie tablicy bajtów o rozmiarze 4 (int ma 4 bajty)
 
         for (int i = 3; i >= 0; i--) {
-            byteArray[3-i] = (byte) (number >>> (i * 8)); // Konwersja int na bajty
+            byteArray[3 - i] = (byte) (number >>> (i * 8)); // Konwersja int na bajty
         }
 
         return byteArray;
@@ -166,9 +167,9 @@ public class Lyra2 {
 
 
         long[] packedInit = packToLongs(initData);
-        for (int i =0;i<packedInit.length/BLOCK_LENGTH_IN_LONG;i++){
-            int offset = i*BLOCK_LENGTH_IN_LONG;
-            sponge.absorbBlock(packedInit,BLOCK_LENGTH_IN_LONG,offset);
+        for (int i = 0; i < packedInit.length / BLOCK_LENGTH_IN_LONG; i++) {
+            int offset = i * BLOCK_LENGTH_IN_LONG;
+            sponge.absorbBlock(packedInit, BLOCK_LENGTH_IN_LONG, offset);
         }
 
 
@@ -209,16 +210,16 @@ public class Lyra2 {
             prev1 = row1;
         }
 
-        sponge.absorbBlock(matrix[row0],BLOCK_LENGTH_IN_LONG,0);
+        sponge.absorbBlock(matrix[row0], BLOCK_LENGTH_IN_LONG, 0);
 
         sponge.squeeze(hash, KEY_LENGTH);
     }
 
     public static void main(String[] args) {
-        Parameters params = new Parameters(256, 100, 3, 1, 12, 8);
+        Parameters params = new Parameters(256, 5, 3, 1, 12, 12);
 
         Lyra2 lyra = new Lyra2(params);
-        System.out.println(lyra.phsHex("p", "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"));
+        System.out.println(lyra.phsHex("p", "123"));
 
     }
 }
