@@ -202,8 +202,8 @@ public class Lyra2 {
         }
 
         for (int wCount = 0; wCount < TIME_COST * MEMORY_COST; wCount++) {
-            row0 = (int) Long.remainderUnsigned(sponge.state[0], MEMORY_COST);
-            row1 = (int) Long.remainderUnsigned(sponge.state[2], MEMORY_COST);
+            row0 = (int) Long.remainderUnsigned(Blake2BSponge.switchEndian(sponge.state[0]), MEMORY_COST);
+            row1 = (int) Long.remainderUnsigned(Blake2BSponge.switchEndian(sponge.state[2]), MEMORY_COST);
             sponge.reducedDuplexWandering(matrix[row1], matrix[row0], matrix[prev1], matrix[prev0]);
             prev0 = row0;
             prev1 = row1;
@@ -215,9 +215,10 @@ public class Lyra2 {
     }
 
     public static void main(String[] args) {
-        Parameters params = new Parameters(256, 100, 10, 10, 12, 12);
+        Parameters params = new Parameters(256, 100, 3, 1, 12, 8);
 
         Lyra2 lyra = new Lyra2(params);
+        System.out.println(lyra.phsHex("p", "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"));
 
     }
 }

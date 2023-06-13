@@ -54,7 +54,7 @@ public class Blake2BSponge {
      * @param x zmienna, w której należy zmienić kolejność bajtów
      * @return zmienna z zamienioną kolejnością bajtów
      */
-    public long switchEndian(final long x) {
+    public static long switchEndian(final long x) {
         return (x & 0x00000000000000FFL) << 56
                 | (x & 0x000000000000FF00L) << 40
                 | (x & 0x0000000000FF0000L) << 24
